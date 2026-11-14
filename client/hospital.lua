@@ -39,9 +39,26 @@ local function startCare(care)
     local bed = care.bed
     local ped = PlayerPedId()
     SetEntityCoords(ped, bed.x, bed.y, bed.z, false, false, false, false)
-    TaskStartScenarioAtPosition(ped, 'PROP_HUMAN_BUM_BIN', bed.x, bed.y, bed.z, bed.w or 0.0, 0, true, false)
+    SetEntityHeading(ped, bed.w or 0.0)
     Kora.notify.send({ title = 'Hospital Check-in', message = 'Resting in your assigned bed.', type = 'info' })
     if leaveBinding then leaveBinding.disable(false) end
+
+    -- Lie down on the bed: a looping animation (not a sitting scenario). Loaded
+    -- in its own thread because RequestAnimDict must be waited on.
+    CreateThread(function()
+        local anim = Config.hospitalCare.bedAnim
+        if type(anim) ~= 'table' or not anim.dict or not anim.clip then return end
+        RequestAnimDict(anim.dict)
+        local deadline = GetGameTimer() + 5000
+        while not HasAnimDictLoaded(anim.dict) and GetGameTimer() < deadline do Wait(10) end
+        if not activeCare or activeCare.token ~= care.token then return end
+        if not HasAnimDictLoaded(anim.dict) then
+            print(('[kora_ambulance] bed animation dict %s failed to load'):format(anim.dict))
+            return
+        end
+        TaskPlayAnim(PlayerPedId(), anim.dict, anim.clip, 8.0, -8.0, -1, anim.flag or 1, 0.0, false, false, false)
+        RemoveAnimDict(anim.dict)
+    end)
 
     -- One sleep for the whole care duration instead of a per-frame tick.
     CreateThread(function()

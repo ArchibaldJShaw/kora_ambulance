@@ -57,12 +57,19 @@ h.test('completed server care heals locally; cancelled and inactive care do not'
     SetEntityHealth = function(ped, value) handle.setHealth(ped, value) end -- client-only native
     SetEntityCoords = function() end
     ClearPedTasks = function() end
-    local scenarios = 0
-    TaskStartScenarioAtPosition = function() scenarios = scenarios + 1 end
-    TaskStartScenarioAtCoords = nil
+    local anims = {}
+    RequestAnimDict = function() end
+    HasAnimDictLoaded = function() return true end
+    RemoveAnimDict = function() end
+    TaskPlayAnim = function(_, dict, clip, _, _, _, flag) anims[#anims + 1] = { dict = dict, clip = clip, flag = flag } end
+    TaskStartScenarioAtPosition = function() error('bed must not use a sitting scenario') end
     local care = { token = 'care-test', bed = { x = 1, y = 2, z = 3 }, duration = 5000 }
     handle.fireEvent('qbambulance:client:checkInAccepted', 65535, care)
-    h.assertEqual(scenarios, 1)
+    handle.step() -- runs the bed-animation thread
+    h.assertEqual(#anims, 1)
+    h.assertEqual(anims[1].dict, Config.hospitalCare.bedAnim.dict)
+    h.assertEqual(anims[1].clip, Config.hospitalCare.bedAnim.clip)
+    h.assertEqual(anims[1].flag, 1, 'animation loops on the bed')
     handle.fireEvent('qbambulance:client:bedReleased', 65535, 'left-bed')
     h.assertEqual(handle.players[1].health, 40)
     handle.fireEvent('qbambulance:client:bedReleased', 65535, 'completed')
