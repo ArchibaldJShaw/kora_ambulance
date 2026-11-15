@@ -74,7 +74,7 @@ function Hospital.requestCheckIn(src, hospitalName)
     if not hospital then return false, Kora.lang('error.unknown_hospital') end
     if sessions[src] then return false, Kora.lang('error.bed_reserved') end
     if not hospital.beds or #hospital.beds == 0 then
-        if Config.Debug then print(('[kora_ambulance] check-in refused: hospital %s has no beds'):format(hospital.name)) end
+        if Config.Debug then Kora.logging.warn('hospital.check_in_refused', 'Check-in refused: hospital has no beds', { hospital = tostring(hospital.name) }) end
         return false, Kora.lang('error.no_beds')
     end
     if Death.isDead(src) then return false, Kora.lang('error.dead_respawn') end

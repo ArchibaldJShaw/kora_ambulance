@@ -69,7 +69,7 @@ local playerAlerts = {
 
 for key, definition in pairs(playerAlerts) do
     local ok, err = exports.kora_dispatch:registerPlayerAlert(key, definition)
-    if not ok then print(('^3[kora_ambulance]^7 could not register dispatch alert %s: %s'):format(key, err)) end
+    if not ok then Kora.logging.warn('dispatch.alert_register_failed', 'Could not register a dispatch alert', { alert = tostring(key), error = tostring(err) }) end
 end
 
 RegisterNetEvent('hospital:server:ambulanceAlert', function()
