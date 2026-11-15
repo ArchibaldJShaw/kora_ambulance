@@ -387,7 +387,7 @@ function Death.respawnAtHospital(src, hospitalName)
     if Config.death.respawn.clearInventory then
         local cleared, reason = exports.kora_inventory:clearInventory(src, Config.death.respawn.keepItems)
         if not cleared then
-            print(('[kora_ambulance] respawn inventory wipe failed for %d: %s'):format(src, tostring(reason)))
+            Kora.logging.error('death.respawn_wipe_failed', 'Respawn inventory wipe failed', { playerId = src, error = tostring(reason) })
         end
     end
 

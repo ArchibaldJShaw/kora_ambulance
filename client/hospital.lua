@@ -112,7 +112,7 @@ local hospitalBlips = {} -- hospital name -> map blip, removed before re-registr
 
 local function registerHospital(hospital)
     if Config.Debug then
-        print(('[kora_ambulance] registering targets for hospital %s (beds: %d)'):format(hospital.name, #(hospital.beds or {})))
+        Kora.logging.debug('hospital.registering_targets', 'Registering targets for hospital', { hospital = tostring(hospital.name), beds = #(hospital.beds or {}) })
     end
 
     zoneIds[hospital.name] = zoneIds[hospital.name] or {}
@@ -138,7 +138,7 @@ local function registerHospitalTargets()
         if Config.hospitalMenu.isolateErrors then
             local ok, err = pcall(registerHospital, hospital)
             if not ok then
-                print(('[kora_ambulance] could not register targets for hospital %s: %s'):format(tostring(hospital.name), tostring(err)))
+                Kora.logging.error('hospital.register_targets_failed', 'Could not register targets for hospital', { hospital = tostring(hospital.name), error = tostring(err) })
             end
         else
             registerHospital(hospital)

@@ -89,7 +89,7 @@ local function registerDutyTargets()
         if Config.hospitalMenu.isolateErrors then
             local ok, err = pcall(registerDutyTarget, hospital)
             if not ok then
-                print(('[kora_ambulance] could not register duty targets for hospital %s: %s'):format(tostring(hospital.name), tostring(err)))
+                Kora.logging.error('duty.register_targets_failed', 'Could not register duty targets for hospital', { hospital = tostring(hospital.name), error = tostring(err) })
             end
         else
             registerDutyTarget(hospital)

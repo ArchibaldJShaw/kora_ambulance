@@ -385,7 +385,7 @@ function Config.validate()
         if type(hospital.beds) ~= 'table' or #hospital.beds == 0 then
             assert(Config.hospitalCare.allowBedless == true, 'each hospital requires at least one bed')
             hospital.beds = {}
-            if Config.Debug then print(('[kora_ambulance] hospital %s has no beds configured; check-in disabled there'):format(hospital.name)) end
+            if Config.Debug then Kora.logging.debug('hospital.no_beds_configured', 'Hospital has no beds configured; check-in disabled there', { hospital = tostring(hospital.name) }) end
         end
         for _, bed in ipairs(hospital.beds) do
             assert(isVector3(bed), 'hospital beds must be vectors')

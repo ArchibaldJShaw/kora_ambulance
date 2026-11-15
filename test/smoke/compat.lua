@@ -196,4 +196,18 @@ h.test('status is EMS-only and asks the caller to render their own status', func
     h.assertEqual(event.target, 26)
 end)
 
+h.test('a failed dispatch alert registration is reported through Kora.logging.warn with the error in fields', function()
+    handle.Kora.logging.calls = {}
+    local original = handle.kora_dispatch.registerPlayerAlert
+    handle.kora_dispatch.registerPlayerAlert = function() return false, 'dispatch offline' end
+    dofile('server/compat/hospital.lua')
+    handle.kora_dispatch.registerPlayerAlert = original
+
+    local call = handle.Kora.logging.calls[1]
+    h.assertTrue(call ~= nil, 'a logger call was made')
+    h.assertEqual(call.level, 'warn')
+    h.assertEqual(call.event, 'dispatch.alert_register_failed')
+    h.assertEqual(call.fields.error, 'dispatch offline')
+end)
+
 h.report('compat')

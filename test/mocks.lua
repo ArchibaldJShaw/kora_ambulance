@@ -198,6 +198,15 @@ function M.install()
     }
 
     Kora.logging = { events = {}, event = function(category, src, data) table.insert(Kora.logging.events, { category = category, src = src, data = data }) end }
+    -- Spy for the diagnostic API: every level call is recorded in Kora.logging.calls.
+    Kora.logging.calls = {}
+    Kora.logging.isEnabled = function() return true end
+    for _, level in ipairs({ 'trace', 'debug', 'info', 'warn', 'error', 'fatal' }) do
+        Kora.logging[level] = function(event, message, fields)
+            Kora.logging.calls[#Kora.logging.calls + 1] = { level = level, event = event, message = message, fields = fields }
+            return true
+        end
+    end
 
     Kora.commands = {
         registry = {},
