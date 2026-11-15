@@ -2,7 +2,7 @@
 -- side-effecting wrapper, exercised against the mock's in-memory money.
 local h = dofile('test/harness.lua')
 local mocks = dofile('test/mocks.lua'); local handle = mocks.install()
-dofile('config.lua')
+dofile('shared/config.lua')
 dofile('server/billing.lua')
 
 h.test('calculateCost is just baseCost with no wounds', function()
@@ -81,6 +81,66 @@ h.test('charge is reusable for successful non-respawn care', function()
     local charged = Billing.charge(5, Config.billing.checkInCost, 'EMS check-in care')
     h.assertEqual(charged, Config.billing.checkInCost)
     h.assertEqual(handle.players[5].money[Config.billing.account], 300 - Config.billing.checkInCost)
+end)
+
+local statements = {}
+exports.kora_banking = {
+    CreateBankStatement = function(_, src, account, amount, reason, kind)
+        statements[#statements + 1] = { src, account, amount, reason, kind }
+        return true
+    end,
+}
+handle.resourceStates.kora_banking = 'started'
+
+h.test('check-in records exactly the amount charged to checking', function()
+    local src = 6
+    local player = handle.ensurePlayer(src)
+    for _, cash in ipairs({ 0, 50, 250 }) do
+        player.money.cash, player.money.bank = cash, 500
+        statements = {}
+
+        Billing.charge(src, 250, 'EMS check-in care')
+
+        local bankDebit = 250 - cash
+        h.assertEqual(player.money.cash, 0)
+        h.assertEqual(player.money.bank, 500 - bankDebit)
+        h.assertEqual(#statements, bankDebit > 0 and 1 or 0)
+        if bankDebit > 0 then
+            h.assertEqual(statements[1][1], src)
+            h.assertEqual(statements[1][2], 'checking')
+            h.assertEqual(statements[1][3], bankDebit)
+            h.assertEqual(statements[1][4], 'Hospital Treatment')
+            h.assertEqual(statements[1][5], 'withdraw')
+        end
+    end
+end)
+
+h.test('a declined bank debit creates no activity row', function()
+    local src = 7
+    local player = handle.ensurePlayer(src)
+    player.money.cash, player.money.bank = 0, 10
+    local removeMoney = exports.kora_core.removeMoney
+    exports.kora_core.removeMoney = function() return false end
+    statements = {}
+
+    Billing.charge(src, 250, 'EMS check-in care')
+
+    exports.kora_core.removeMoney = removeMoney
+    h.assertEqual(player.money.bank, 10)
+    h.assertEqual(#statements, 0)
+end)
+
+h.test('a banking export failure leaves the charge and receipt intact', function()
+    local src = 8
+    local player = handle.ensurePlayer(src)
+    player.money.cash, player.money.bank = 0, 500
+    exports.kora_banking.CreateBankStatement = function() error('banking stopped') end
+
+    h.assertEqual(Billing.charge(src, 250), 250)
+
+    h.assertEqual(player.money.bank, 250)
+    h.assertEqual(handle.lastClient('hospital:client:SendBillEmail').target, src)
+    h.assertEqual(Kora.logging.calls[#Kora.logging.calls].event, 'billing.statement_failed')
 end)
 
 h.report('billing')
