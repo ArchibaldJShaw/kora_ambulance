@@ -34,15 +34,33 @@ function Billing.charge(src, cost, reason)
     cost = math.max(0, math.floor(tonumber(cost) or 0))
     if cost <= 0 then return 0 end
 
-    local available = QBCore:getMoney(src, Config.billing.account) or 0
+    local account, fallbackAccount = Config.billing.account, Config.billing.fallbackAccount
+    local debitReason = reason or 'EMS hospital bill'
+    local bankDebit = 0
+    local available = QBCore:getMoney(src, account) or 0
     local fromPrimary = math.min(available, cost)
     if fromPrimary > 0 then
-        QBCore:removeMoney(src, Config.billing.account, fromPrimary, reason or 'EMS hospital bill')
+        local removed = QBCore:removeMoney(src, account, fromPrimary, debitReason)
+        if removed and account == 'bank' then bankDebit = fromPrimary end
     end
 
     local remainder = cost - fromPrimary
     if remainder > 0 then
-        QBCore:removeMoney(src, Config.billing.fallbackAccount, remainder, reason or 'EMS hospital bill')
+        local removed = QBCore:removeMoney(src, fallbackAccount, remainder, debitReason)
+        if removed and fallbackAccount == 'bank' then bankDebit = bankDebit + remainder end
+    end
+
+    if bankDebit > 0 and GetResourceState('kora_banking') == 'started' then
+        local called, recorded = pcall(function()
+            local label = Kora.lang('title.hospital_treatment')
+            return exports.kora_banking:CreateBankStatement(src, 'checking', bankDebit, label, 'withdraw')
+        end)
+        if not called or recorded ~= true then
+            Kora.logging.warn('billing.statement_failed', 'Hospital bank statement write failed', {
+                source = src,
+                amount = bankDebit,
+            })
+        end
     end
 
     TriggerClientEvent('hospital:client:SendBillEmail', src, cost)

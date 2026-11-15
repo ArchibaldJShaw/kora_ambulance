@@ -1,6 +1,7 @@
 return {
     title = { ems = 'EMS', hospital = 'Hospital', hospital_checkin = 'Hospital Check-in',
-        hospital_bill = 'Hospital Bill', ems_garage = 'EMS Garage', first_aid = 'First Aid',
+        hospital_bill = 'Hospital Bill', hospital_treatment = 'Hospital Treatment',
+        ems_garage = 'EMS Garage', first_aid = 'First Aid',
         painkillers = 'Painkillers', transport = 'Patient Transport', assessment = 'Patient Assessment',
         treatment = 'Patient Treatment', house_call = 'House Call', house_calls = 'Open House Calls', status = 'Status' },
     ui = {

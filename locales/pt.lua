@@ -1,7 +1,8 @@
 return {
     title = {
         ems = 'EMS', hospital = 'Hospital', hospital_checkin = 'Entrada no Hospital',
-        hospital_bill = 'Fatura do Hospital', ems_garage = 'Garagem do EMS', first_aid = 'Primeiros Socorros',
+        hospital_bill = 'Fatura do Hospital', hospital_treatment = 'Tratamento Hospitalar',
+        ems_garage = 'Garagem do EMS', first_aid = 'Primeiros Socorros',
         painkillers = 'Analgésicos', transport = 'Transporte de Paciente', assessment = 'Avaliação do Paciente',
         treatment = 'Tratamento do Paciente', house_call = 'Chamada ao Domicílio', house_calls = 'Chamadas ao Domicílio Abertas', status = 'Estado',
     },
