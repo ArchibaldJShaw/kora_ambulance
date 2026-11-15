@@ -83,6 +83,11 @@ h.test('charge is reusable for successful non-respawn care', function()
     h.assertEqual(handle.players[5].money[Config.billing.account], 300 - Config.billing.checkInCost)
 end)
 
+local locale = dofile('locales/en.lua')
+Kora.lang = function(key)
+    local section, name = key:match('^([^.]+)%.([^.]+)$')
+    return assert(locale[section][name], key)
+end
 local statements = {}
 exports.kora_banking = {
     CreateBankStatement = function(_, src, account, amount, reason, kind)
@@ -130,8 +135,21 @@ h.test('a declined bank debit creates no activity row', function()
     h.assertEqual(#statements, 0)
 end)
 
-h.test('a banking export failure leaves the charge and receipt intact', function()
+h.test('check-in writes the configured Portuguese label to the statement', function()
     local src = 8
+    local player = handle.ensurePlayer(src)
+    player.money.cash, player.money.bank = 0, 500
+    locale = dofile('locales/pt.lua')
+    statements = {}
+
+    Billing.charge(src, 250)
+
+    h.assertEqual(#statements, 1)
+    h.assertEqual(statements[1][4], 'Tratamento Hospitalar')
+end)
+
+h.test('a banking export failure leaves the charge and receipt intact', function()
+    local src = 9
     local player = handle.ensurePlayer(src)
     player.money.cash, player.money.bank = 0, 500
     exports.kora_banking.CreateBankStatement = function() error('banking stopped') end

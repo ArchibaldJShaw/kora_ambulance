@@ -68,7 +68,7 @@ Only `completed` is billed.
 
 All charges go through the same routine. The cost is taken from `Config.billing.account` (default `cash`), capped at that account's balance. The rest is taken from `fallbackAccount` (default `bank`). Care is never refused for lack of money. After a charge the server sends `hospital:client:SendBillEmail(cost)` to the player (the compatibility client shows `You were billed $N.`) and fires `kora_ambulance:server:onBillCharged(src, cost)`.
 
-When `kora_banking` is running, Accounts → Activity shows a **Hospital Treatment** withdrawal for the portion successfully debited from the player's bank account. Cash-only payments create no bank statement. A statement write failure is logged and billing still completes.
+When `kora_banking` is running, Accounts → Activity shows a **Hospital Treatment** withdrawal for the portion successfully debited from the player's bank account. The statement saves the label in the server's configured `kora_locale` at the time of billing. Cash-only payments create no bank statement. A statement write failure is logged and billing still completes.
 
 | Charge | Amount | Money reason |
 |---|---|---|
